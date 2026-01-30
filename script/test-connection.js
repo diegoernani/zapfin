@@ -8,17 +8,35 @@ import pg from 'pg';
 const { Pool } = pg;
 
 // Configuração do Railway
-const config = {
-  host: 'ballast.proxy.rlwy.net',
-  port: 28070,
-  // Preencha com suas credenciais do Railway
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'railway',
-  ssl: {
-    rejectUnauthorized: false // Railway geralmente requer SSL
-  }
-};
+// Use DATABASE_URL se disponível, senão use configuração manual
+let config;
+
+if (process.env.DATABASE_URL) {
+  // Usa DATABASE_URL se configurada
+  const url = new URL(process.env.DATABASE_URL);
+  config = {
+    host: url.hostname,
+    port: parseInt(url.port),
+    user: url.username,
+    password: url.password,
+    database: url.pathname.slice(1), // Remove a barra inicial
+    ssl: {
+      rejectUnauthorized: false
+    }
+  };
+} else {
+  // Configuração manual (fallback)
+  config = {
+    host: 'ballast.proxy.rlwy.net',
+    port: 28070,
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'TsxuRHybebXeFWtpKEygyeyVPJDPmLyx',
+    database: process.env.DB_NAME || 'railway',
+    ssl: {
+      rejectUnauthorized: false
+    }
+  };
+}
 
 console.log('🔌 Testando conexão com Railway...');
 console.log(`Host: ${config.host}:${config.port}`);
