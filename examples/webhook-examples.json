@@ -1,0 +1,58 @@
+{
+  "exemplos": {
+    "texto_categoria_transporte": {
+      "tipo": "texto",
+      "conteudo": "transporte",
+      "grupo": "grupo-123",
+      "remetente": "5511999999999"
+    },
+    "texto_categoria_comida": {
+      "tipo": "texto",
+      "conteudo": "comida",
+      "grupo": "grupo-123",
+      "remetente": "5511999999999"
+    },
+    "imagem_com_url": {
+      "tipo": "imagem",
+      "url": "https://exemplo.com/comprovante.jpg",
+      "grupo": "grupo-123",
+      "remetente": "5511999999999"
+    },
+    "imagem_com_base64": {
+      "tipo": "imagem",
+      "imagem": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
+      "grupo": "grupo-123",
+      "remetente": "5511999999999"
+    },
+    "fechar_viagem": {
+      "tipo": "texto",
+      "conteudo": "fechar viagem",
+      "grupo": "grupo-123",
+      "remetente": "5511999999999"
+    },
+    "audio_categoria": {
+      "tipo": "audio",
+      "conteudo": "base64_audio_data",
+      "grupo": "grupo-123",
+      "remetente": "5511999999999"
+    }
+  },
+  "notas": {
+    "campos_obrigatorios": [
+      "tipo: texto | imagem | audio",
+      "grupo: ID do grupo do WhatsApp",
+      "remetente: Número do remetente"
+    ],
+    "campos_opcionais": [
+      "conteudo: Para mensagens de texto",
+      "url: Para imagens via URL",
+      "imagem: Para imagens em base64 ou buffer"
+    ],
+    "fluxo_recomendado": [
+      "1. Enviar categoria (texto ou áudio)",
+      "2. Enviar imagem do comprovante",
+      "3. Repetir passos 1-2 conforme necessário",
+      "4. Enviar 'fechar viagem' para ver relatório"
+    ]
+  }
+}

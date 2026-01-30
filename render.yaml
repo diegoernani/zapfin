@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: zapfin
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000

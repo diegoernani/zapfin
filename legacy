@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZapFin - Teste Local</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 { color: #25D366; }
+    .section {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 5px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #25D366;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 5px 5px 5px 0;
+    }
+    button:hover {
+      background: #20ba5a;
+    }
+    .btn-pdf {
+      background: #dc3545;
+      margin-top: 10px;
+    }
+    .btn-pdf:hover {
+      background: #c82333;
+    }
+    .response {
+      margin-top: 15px;
+      padding: 15px;
+      background: #e8f5e9;
+      border-left: 4px solid #25D366;
+      border-radius: 4px;
+      white-space: pre-wrap;
+    }
+    .error {
+      background: #ffebee;
+      border-left-color: #f44336;
+    }
+    .info {
+      background: #e3f2fd;
+      border-left-color: #2196f3;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💰 ZapFin - Teste Local</h1>
+    
+    <div class="info">
+      <strong>ℹ️ Este é um simulador local.</strong><br>
+      Para receber webhooks reais, você precisa hospedar o servidor em um serviço online (Glitch, Replit, etc).<br>
+      Veja o arquivo <code>SERVICOS_ONLINE.md</code> para instruções.
+    </div>
+
+    <div class="section">
+      <h2>🧪 Simular Webhook</h2>
+      
+      <label>Tipo de Mensagem:</label>
+      <select id="tipo">
+        <option value="texto">Texto</option>
+        <option value="imagem">Imagem</option>
+        <option value="audio">Áudio</option>
+      </select>
+
+      <label>Conteúdo (para texto):</label>
+      <input type="text" id="conteudo" placeholder="transporte, comida, ou fechar viagem">
+
+      <label>URL da Imagem (para tipo imagem):</label>
+      <input type="text" id="urlImagem" placeholder="https://exemplo.com/imagem.jpg">
+
+      <label>Grupo:</label>
+      <input type="text" id="grupo" value="teste-grupo-123">
+
+      <label>Remetente:</label>
+      <input type="text" id="remetente" value="5511999999999">
+
+      <button onclick="enviarWebhook()">📤 Enviar Webhook</button>
+      <button onclick="testeCompleto()">🔄 Teste Completo</button>
+      <button onclick="limpar()">🗑️ Limpar</button>
+    </div>
+
+    <div id="response"></div>
+  </div>
+
+  <script>
+    // Simulação do processamento local (sem servidor)
+    let estado = {
+      categoria: null,
+      gastos: []
+    };
+
+    function parseCategory(text) {
+      const normalized = text.toLowerCase().trim();
+      if (normalized.includes('transporte') || normalized.includes('transport')) {
+        return 'transporte';
+      }
+      if (normalized.includes('comida') || normalized.includes('alimentação') || normalized.includes('alimentacao')) {
+        return 'comida';
+      }
+      return null;
+    }
+
+    function isCloseTripCommand(text) {
+      const normalized = text.toLowerCase().trim();
+      return normalized.includes('fechar viagem') || normalized.includes('fechar');
+    }
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(value);
+    }
+
+    function processarMensagem(payload) {
+      const tipo = payload.tipo || 'texto';
+      const grupo = payload.grupo || 'default';
+      const remetente = payload.remetente || 'unknown';
+
+      if (tipo === 'texto') {
+        const texto = payload.conteudo || '';
+        
+        if (isCloseTripCommand(texto)) {
+          return gerarRelatorio();
+        }
+        
+        const category = parseCategory(texto);
+        if (category) {
+          estado.categoria = category;
+          return `✅ Categoria "${category}" definida! Agora envie a imagem do comprovante.`;
+        }
+        
+        return `ℹ️ Para registrar um gasto:
+1️⃣ Envie a categoria: "transporte" ou "comida"
+2️⃣ Envie a imagem do comprovante
+3️⃣ Para ver o relatório, envie: "fechar viagem"`;
+      }
+
+      if (tipo === 'imagem') {
+        if (!estado.categoria) {
+          return `❌ Nenhuma categoria definida!
+Por favor, envie primeiro a categoria: "transporte" ou "comida"`;
+        }
+
+        // Simula OCR (valor aleatório)
+        const valor = (Math.random() * 190 + 10).toFixed(2);
+        
+        estado.gastos.push({
+          categoria: estado.categoria,
+          valor: parseFloat(valor),
+          data: new Date().toISOString()
+        });
+
+        const categoriaAtual = estado.categoria;
+        estado.categoria = null; // Limpa após processar
+
+        return `✅ Gasto registrado!
+📋 Categoria: ${categoriaAtual}
+💰 Valor: R$ ${valor}
+
+Envie outra categoria ou "fechar viagem" para ver o relatório.`;
+      }
+
+      if (tipo === 'audio') {
+        return `ℹ️ Transcrição de áudio ainda não está disponível.
+Por favor, envie a categoria por texto: "transporte" ou "comida"`;
+      }
+
+      return '❌ Tipo de mensagem não suportado.';
+    }
+
+    function gerarRelatorio() {
+      const stats = {
+        comida: 0,
+        transporte: 0,
+        geral: 0
+      };
+
+      estado.gastos.forEach(g => {
+        stats.geral += g.valor;
+        if (g.categoria === 'comida') {
+          stats.comida += g.valor;
+        } else if (g.categoria === 'transporte') {
+          stats.transporte += g.valor;
+        }
+      });
+
+      if (stats.geral === 0) {
+        return {
+          texto: `📍 RELATÓRIO DA VIAGEM
+
+🍔 Alimentação: R$ 0,00
+🚗 Transporte: R$ 0,00
+
+💰 Total geral: R$ 0,00
+
+ℹ️ Nenhum gasto registrado ainda.`,
+          stats: stats
+        };
+      }
+
+      return {
+        texto: `📍 RELATÓRIO DA VIAGEM
+
+🍔 Alimentação: ${formatCurrency(stats.comida)}
+🚗 Transporte: ${formatCurrency(stats.transporte)}
+
+💰 Total geral: ${formatCurrency(stats.geral)}`,
+        stats: stats
+      };
+    }
+
+    async function enviarWebhook() {
+      const tipo = document.getElementById('tipo').value;
+      const conteudo = document.getElementById('conteudo').value;
+      const urlImagem = document.getElementById('urlImagem').value;
+      const grupo = document.getElementById('grupo').value;
+      const remetente = document.getElementById('remetente').value;
+
+      const payload = {
+        tipo,
+        grupo,
+        remetente
+      };
+
+      if (tipo === 'texto') {
+        payload.conteudo = conteudo;
+      } else if (tipo === 'imagem') {
+        payload.url = urlImagem;
+      }
+
+      const responseDiv = document.getElementById('response');
+      responseDiv.innerHTML = '<div class="response">⏳ Processando...</div>';
+
+      // Simula delay de processamento
+      setTimeout(() => {
+        try {
+          const resposta = processarMensagem(payload);
+          const respostaTexto = typeof resposta === 'string' ? resposta : resposta.texto;
+          const respostaStats = typeof resposta === 'object' && resposta.stats ? resposta.stats : null;
+          
+          let htmlResposta = `
+            <div class="response">
+              <strong>📥 Payload Enviado:</strong><br>
+              <pre>${JSON.stringify(payload, null, 2)}</pre>
+              <br>
+              <strong>📤 Resposta:</strong><br>
+              ${respostaTexto.replace(/\n/g, '<br>')}
+          `;
+          
+          // Se for relatório, adiciona botão de PDF
+          if (respostaStats && isCloseTripCommand(payload.conteudo || '')) {
+            htmlResposta += `
+              <br><br>
+              <button class="btn-pdf" onclick="gerarPDF(${JSON.stringify(respostaStats).replace(/"/g, '&quot;')})">
+                📄 Gerar PDF do Relatório
+              </button>
+            `;
+          }
+          
+          htmlResposta += '</div>';
+          responseDiv.innerHTML = htmlResposta;
+        } catch (error) {
+          responseDiv.innerHTML = `<div class="response error">❌ Erro: ${error.message}</div>`;
+        }
+      }, 500);
+    }
+
+    async function testeCompleto() {
+      const grupo = document.getElementById('grupo').value;
+      const remetente = document.getElementById('remetente').value;
+      const responseDiv = document.getElementById('response');
+      
+      responseDiv.innerHTML = '<div class="response">🔄 Executando teste completo...</div>';
+
+      const testes = [
+        { tipo: 'texto', conteudo: 'transporte', delay: 1000 },
+        { tipo: 'imagem', url: 'https://via.placeholder.com/400.jpg', delay: 1000 },
+        { tipo: 'texto', conteudo: 'comida', delay: 1000 },
+        { tipo: 'imagem', url: 'https://via.placeholder.com/400.jpg', delay: 1000 },
+        { tipo: 'texto', conteudo: 'fechar viagem', delay: 0 }
+      ];
+
+      let resultado = '<div class="response"><strong>🧪 Teste Completo:</strong><br><br>';
+
+      for (const teste of testes) {
+        await new Promise(resolve => setTimeout(resolve, teste.delay));
+        
+        const payload = {
+          tipo: teste.tipo,
+          grupo,
+          remetente,
+          ...(teste.conteudo && { conteudo: teste.conteudo }),
+          ...(teste.url && { url: teste.url })
+        };
+
+        const resposta = processarMensagem(payload);
+        const respostaTexto = typeof resposta === 'string' ? resposta : resposta.texto;
+        const respostaStats = typeof resposta === 'object' && resposta.stats ? resposta.stats : null;
+        
+        let linhaResposta = `<strong>${teste.tipo === 'texto' ? '📝' : '🖼️'} ${teste.tipo}:</strong><br>${respostaTexto.replace(/\n/g, '<br>')}`;
+        
+        // Se for relatório, adiciona botão de PDF
+        if (respostaStats && teste.conteudo && isCloseTripCommand(teste.conteudo)) {
+          linhaResposta += `<br><button class="btn-pdf" onclick="gerarPDF(${JSON.stringify(respostaStats).replace(/"/g, '&quot;')})">📄 Gerar PDF</button>`;
+        }
+        
+        linhaResposta += '<br><br>';
+        resultado += linhaResposta;
+      }
+
+      resultado += '</div>';
+      responseDiv.innerHTML = resultado;
+    }
+
+    function limpar() {
+      estado.categoria = null;
+      estado.gastos = [];
+      document.getElementById('response').innerHTML = '';
+      document.getElementById('conteudo').value = '';
+      document.getElementById('urlImagem').value = '';
+    }
+
+    function gerarPDF(stats) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Configurações
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 20;
+      let yPos = margin;
+      
+      // Título
+      doc.setFontSize(20);
+      doc.setTextColor(37, 211, 102); // Verde WhatsApp
+      doc.text('RELATÓRIO DA VIAGEM', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 15;
+      
+      // Data
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      const dataAtual = new Date().toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      doc.text(`Gerado em: ${dataAtual}`, pageWidth / 2, yPos, { align: 'center' });
+      yPos += 20;
+      
+      // Linha separadora
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+      yPos += 15;
+      
+      // Categorias
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      
+      // Alimentação
+      doc.setFontSize(12);
+      doc.text('🍔 Alimentação', margin, yPos);
+      doc.setFontSize(14);
+      doc.text(formatCurrency(stats.comida), pageWidth - margin, yPos, { align: 'right' });
+      yPos += 12;
+      
+      // Transporte
+      doc.setFontSize(12);
+      doc.text('🚗 Transporte', margin, yPos);
+      doc.setFontSize(14);
+      doc.text(formatCurrency(stats.transporte), pageWidth - margin, yPos, { align: 'right' });
+      yPos += 15;
+      
+      // Linha separadora
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+      yPos += 15;
+      
+      // Total
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('💰 Total Geral', margin, yPos);
+      doc.text(formatCurrency(stats.geral), pageWidth - margin, yPos, { align: 'right' });
+      
+      // Rodapé
+      yPos = doc.internal.pageSize.getHeight() - 20;
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(150, 150, 150);
+      doc.text('ZapFin - Sistema de Controle de Gastos', pageWidth / 2, yPos, { align: 'center' });
+      
+      // Salva o PDF
+      const nomeArquivo = `relatorio-viagem-${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(nomeArquivo);
+    }
+  </script>
+</body>
+</html>
